@@ -136,7 +136,7 @@ io.on('connection', async (socket) => {
     const userId = decoded?.userId || null;
     const isAdmin = decoded?.role === "admin"; // Role should be in token
 
-    console.log(`🟢 Connected: ${socket.id}, userId: ${userId}, isAdmin: ${isAdmin}`);
+    console.log(`🟢 New client connected: ${socket.id}, userId: ${userId}, isAdmin: ${isAdmin}`);
 
     // Fetch all users and send to every connected socket
     const allUsers = await User.find().select('fullName _id');
