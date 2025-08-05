@@ -339,7 +339,7 @@ io.on('connection', async (socket) => {
 
                 // Emit to admin UI (if reconnects quickly or logs are needed)
                 const adminSocketId = userSockets.get("admin");
-                if (adminSocketId) {
+                if (adminSocketId && infoMessage) {
                     io.to(adminSocketId).emit("adminReceiveMessage", infoMessage);
                 }
                 break;
