@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 
 // Load the fuzzy data
 const chatbotData = JSON.parse(
-    fs.readFileSync(path.join(__dirname, '../training/fuzzy_data.json'), 'utf-8')
+    fs.readFileSync(path.join(__dirname, '../training/train.json'), 'utf-8')
 );
 
 export function getChatbotResponse(userMessage = '') {
