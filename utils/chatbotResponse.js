@@ -6,30 +6,38 @@ import stringSimilarity from 'string-similarity';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Load the fuzzy data
 const chatbotData = JSON.parse(
-    fs.readFileSync(path.join(__dirname, '../training/train.json'), 'utf-8')
+    fs.readFileSync(path.join(__dirname, '../training/fuzzy_data.json'), 'utf-8')
 );
-
 
 export function getChatbotResponse(userMessage = '') {
     const input = userMessage.trim().toLowerCase();
 
     if (!input) {
-        return "I didn't catch that. Can you rephrase?";
+        return "🤔 I didn't catch that. Can you rephrase?";
     }
 
-    const tags = chatbotData.flatMap(entry => entry.tags);
-    const bestMatch = stringSimilarity.findBestMatch(input, tags).bestMatch;
+    // Flatten all phrases from every intent
+    const allPhrases = chatbotData.flatMap(entry => entry.user_phrases.map(p => ({ phrase: p, intent: entry.intent })));
+
+    // Extract just the phrases for similarity matching
+    const phrasesOnly = allPhrases.map(p => p.phrase);
+
+    // Find best fuzzy match
+    const bestMatch = stringSimilarity.findBestMatch(input, phrasesOnly).bestMatch;
 
     if (bestMatch.rating > 0.5) {
-        const matchedEntry = chatbotData.find(entry => entry.tags.includes(bestMatch.target));
-        if (matchedEntry?.responses?.length) {
-            return matchedEntry.responses[Math.floor(Math.random() * matchedEntry.responses.length)];
+        // Get the intent linked to this phrase
+        const matched = allPhrases.find(p => p.phrase === bestMatch.target);
+        if (matched) {
+            const matchedEntry = chatbotData.find(entry => entry.intent === matched.intent);
+            if (matchedEntry) {
+                return matchedEntry.response;
+            }
         }
     }
 
     // Default fallback response
-    const fallback = chatbotData.find(e => e.tags.includes('default'));
-    return fallback?.responses?.[Math.floor(Math.random() * fallback.responses.length)]
-        || "I'm not sure how to respond to that.";
+    return "🤷 I'm not sure how to respond to that. Could you clarify?";
 }
