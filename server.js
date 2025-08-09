@@ -191,6 +191,7 @@ io.on('connection', async (socket) => {
                 to: process.env.BOT_ACCOUNT_ID || "68860f0b7d694be675bae2ff"
             });
 
+            socket.emit("typing")
             // Send message back to sender (user)
             socket.emit('receiveMessage', savedUserMessage);
 
@@ -210,7 +211,7 @@ io.on('connection', async (socket) => {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${process.env.CHATBOT_API_TOKEN}`  
+                        'Authorization': `Bearer ${process.env.CHATBOT_API_TOKEN}`
                     },
                     body: JSON.stringify({ message: data.content }),
                 });
@@ -225,7 +226,7 @@ io.on('connection', async (socket) => {
                     sender: "chatbot",
                     to: userId
                 });
-
+                socket.emit("stopTyping")
                 // Send bot reply to user
                 io.to(recipientSocketId).emit('receiveMessage', savedBotMessage);
 
@@ -235,6 +236,7 @@ io.on('connection', async (socket) => {
                 }
             }
         } catch (err) {
+            socket.emit("stopTyping")
             console.error('Message error:', err.message);
         }
     });
