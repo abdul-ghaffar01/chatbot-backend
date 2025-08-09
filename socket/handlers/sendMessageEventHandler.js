@@ -1,5 +1,5 @@
-import Message from "../../models/Message";
-import { onlineUsers, userSockets } from "../utils/maps";
+import Message from "../../models/Message.js";
+import { onlineUsers, userSockets } from "../utils/maps.js";
 
 export default async function sendMessageEventHanlder(io, socket) {
     // ✅ Send Message (User -> Bot -> Admin Notification)
