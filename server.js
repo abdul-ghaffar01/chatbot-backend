@@ -12,6 +12,7 @@ import session from "express-session";
 import authRoutes from "./routes/authRoutes.js"
 import apiRoutes from "./routes/apiRoutes.js"
 import setupPassport from "./passportSetup.js"
+import setupSocket from './socket/index.js';
 dotenv.config();
 
 const app = express();
@@ -38,6 +39,8 @@ app.use("/", apiRoutes)
 
 // Create HTTP server
 const server = http.createServer(app);
+
+setupSocket(server);
 
 // Create Socket.IO server
 // const io = new Server(server, {
