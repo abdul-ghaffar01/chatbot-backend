@@ -13,7 +13,6 @@ export default async function sendMessageEventHanlder(io, socket, userId) {
                 to: process.env.BOT_ACCOUNT_ID || "68860f0b7d694be675bae2ff"
             });
 
-            socket.emit("typing")
             // Send message back to sender (user)
             socket.emit('receiveMessage', savedUserMessage);
 
@@ -28,6 +27,7 @@ export default async function sendMessageEventHanlder(io, socket, userId) {
             const userInfo = onlineUsers.get(recipientSocketId);
 
             if (recipientSocketId && userInfo?.botRepliesEnabled) {
+                socket.emit("typing")
                 // Fetch bot reply
                 const res = await fetch(`${process.env.CHATBOT_BACKEND_URL}/chatbot-resp`, {
                     method: 'POST',
