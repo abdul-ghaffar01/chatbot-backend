@@ -58,8 +58,8 @@ export default function setupSocketHandlers(io) {
         }
 
         // Send message handler modularized
-        sendMessageEventHanlder(io, socket);
-        
+        sendMessageEventHanlder(io, socket, userId);
+
         // Event: Fetch last N messages
         socket.on("get_last_messages", async ({ limit }) => {
             try {
