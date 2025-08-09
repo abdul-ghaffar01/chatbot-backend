@@ -1,17 +1,11 @@
 import jwt_verify from '../../helper/jwt_verify.js';
 import Message from '../../models/Message.js';
 import User from '../../models/User.js';
+import { broadcastOnlineUsers } from '../utils/broadcastOnlineUsers.js';
+import { onlineUsers, userSockets } from '../utils/maps.js';
+import sendMessageEventHanlder from './sendMessageEventHandler.js';
 
 export default function setupSocketHandlers(io) {
-    const onlineUsers = new Map();
-    const userSockets = new Map();
-
-    const broadcastOnlineUsers = () => {
-        const uniqueUsers = Array.from(
-            new Map([...onlineUsers.values()].map(user => [user.userId || user.socketId, user])).values()
-        );
-        io.emit('onlineUsers', uniqueUsers);
-    };
 
     io.on('connection', async (socket) => {
         const token = socket.handshake.query.token;
@@ -25,7 +19,7 @@ export default function setupSocketHandlers(io) {
         const allUsers = await User.find().select('fullName _id');
         socket.emit('allUsers', allUsers);
 
-        broadcastOnlineUsers();
+        broadcastOnlineUsers(io);
 
 
         try {
@@ -42,7 +36,7 @@ export default function setupSocketHandlers(io) {
                 onlineUsers.set(socket.id, { userId, fullName, botRepliesEnabled: true });
                 userSockets.set(userId, socket.id);
 
-                broadcastOnlineUsers()
+                broadcastOnlineUsers(io)
 
                 // ✅ Send user's own chat history (Bot + User)
                 const history = await Message.find({
@@ -63,68 +57,9 @@ export default function setupSocketHandlers(io) {
             console.error('Connection error:', err.message);
         }
 
-        // ✅ Send Message (User -> Bot -> Admin Notification)
-        socket.on('sendMessage', async (data) => {
-            try {
-                // Save user's message
-                const savedUserMessage = await Message.create({
-                    userId: userId,
-                    content: data.content,
-                    sender: "user",
-                    to: process.env.BOT_ACCOUNT_ID || "68860f0b7d694be675bae2ff"
-                });
-
-                socket.emit("typing")
-                // Send message back to sender (user)
-                socket.emit('receiveMessage', savedUserMessage);
-
-                // Notify admin in real-time
-                const adminSocketId = userSockets.get("admin");
-                if (adminSocketId) {
-                    io.to(adminSocketId).emit("adminReceiveMessage", savedUserMessage);
-                }
-
-                // Send bot reply (if enabled)
-                const recipientSocketId = userSockets.get(userId);
-                const userInfo = onlineUsers.get(recipientSocketId);
-
-                if (recipientSocketId && userInfo?.botRepliesEnabled) {
-                    // Fetch bot reply
-                    const res = await fetch(`${process.env.CHATBOT_BACKEND_URL}/chatbot-resp`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${process.env.CHATBOT_API_TOKEN}`
-                        },
-                        body: JSON.stringify({ message: data.content }),
-                    });
-
-                    const botData = await res.json();
-                    const botReply = botData.reply || botData || "I'm here to help!";
-
-                    // Save bot message
-                    const savedBotMessage = await Message.create({
-                        userId: process.env.BOT_ACCOUNT_ID || "68860f0b7d694be675bae2ff",
-                        content: botReply,
-                        sender: "chatbot",
-                        to: userId
-                    });
-                    socket.emit("stopTyping")
-                    // Send bot reply to user
-                    io.to(recipientSocketId).emit('receiveMessage', savedBotMessage);
-
-                    // Send bot reply to admin
-                    if (adminSocketId) {
-                        io.to(adminSocketId).emit("adminReceiveMessage", savedBotMessage);
-                    }
-                }
-            } catch (err) {
-                socket.emit("stopTyping")
-                console.error('Message error:', err.message);
-            }
-        });
-
-
+        // Send message handler modularized
+        sendMessageEventHanlder(io, socket);
+        
         // Event: Fetch last N messages
         socket.on("get_last_messages", async ({ limit }) => {
             try {
@@ -308,8 +243,7 @@ export default function setupSocketHandlers(io) {
                     }
                 }, 5 * 60 * 1000); // 5 minutes
             }
-            broadcastOnlineUsers()
+            broadcastOnlineUsers(io)
         });
-
     });
 }
