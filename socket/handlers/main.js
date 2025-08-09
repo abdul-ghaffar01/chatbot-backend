@@ -1,6 +1,6 @@
-import jwt_verify from '../helper/jwt_verify.js';
-import Message from '../models/Message.js';
-import User from '../models/User.js';
+import jwt_verify from '../../helper/jwt_verify.js';
+import Message from '../../models/Message.js';
+import User from '../../models/User.js';
 
 export default function setupSocketHandlers(io) {
     const onlineUsers = new Map();
