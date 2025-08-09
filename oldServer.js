@@ -10,7 +10,6 @@ import Message from './models/Message.js';
 import { guestSignupController } from './controllers/guesSignupController.js';
 import User from './models/User.js';
 import jwtVerifyController from './controllers/jwtVerifyController.js';
-import jwt_verify from './helper/jwt_verify.js';
 import adminLoginController from './controllers/adminLoginController.js';
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
