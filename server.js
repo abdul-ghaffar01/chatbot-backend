@@ -21,7 +21,7 @@ import { verifyAuthMiddleware } from './middlewares/verifyAuth.js';
 import { deleteAllMessages } from './controllers/deleteChatController.js';
 import { getMessageCount } from './controllers/msgCountController.js';
 import { chatbotController } from './controllers/chatbot.js';
-
+import authRoutes from "./routes/authRoutes.js"
 dotenv.config();
 
 const app = express();
@@ -68,6 +68,8 @@ app.post('/chatbot-resp', chatbotController)
 app.post('/jwtverify', jwtVerifyController);
 app.post('/adminlogin', adminLoginController)
 // Login Route
+
+app.use("/", authRoutes)
 // app.get("/googlelogin", passport.authenticate("google", { scope: ["profile", "email"] }));
 
 
