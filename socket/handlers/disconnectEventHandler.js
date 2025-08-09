@@ -1,6 +1,6 @@
-import Message from "../../models/Message";
-import { broadcastOnlineUsers } from "../utils/broadcastOnlineUsers";
-import { onlineUsers, userSockets } from "../utils/maps";
+import Message from "../../models/Message.js";
+import { broadcastOnlineUsers } from "../utils/broadcastOnlineUsers.js";
+import { onlineUsers, userSockets } from "../utils/maps.js";
 
 export default async function disconnect(io, socket) {
 
