@@ -13,7 +13,6 @@ import jwtVerifyController from './controllers/jwtVerifyController.js';
 import jwt_verify from './helper/jwt_verify.js';
 import adminLoginController from './controllers/adminLoginController.js';
 import passport from "passport";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import session from "express-session";
 import jwt from "jsonwebtoken"
 import crypto from "crypto";
@@ -40,23 +39,23 @@ app.use(express.json());
 // Connect DB
 await connectDB();
 
-// Passport Google Strategy
-passport.use(
-    new GoogleStrategy(
-        {
-            clientID: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            callbackURL: `${process.env.CHATBOT_BACKEND_URL}/auth/google/callback`,
-        },
-        (accessToken, refreshToken, profile, done) => {
-            // Return user profile
-            return done(null, profile);
-        }
-    )
-);
+// // Passport Google Strategy
+// passport.use(
+//     new GoogleStrategy(
+//         {
+//             clientID: process.env.GOOGLE_CLIENT_ID,
+//             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+//             callbackURL: `${process.env.CHATBOT_BACKEND_URL}/auth/google/callback`,
+//         },
+//         (accessToken, refreshToken, profile, done) => {
+//             // Return user profile
+//             return done(null, profile);
+//         }
+//     )
+// );
 
-passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((user, done) => done(null, user));
+// passport.serializeUser((user, done) => done(null, user));
+// passport.deserializeUser((user, done) => done(null, user));
 
 // Routes
 app.post('/login', loginController);
@@ -69,46 +68,46 @@ app.post('/chatbot-resp', chatbotController)
 app.post('/jwtverify', jwtVerifyController);
 app.post('/adminlogin', adminLoginController)
 // Login Route
-app.get("/googlelogin", passport.authenticate("google", { scope: ["profile", "email"] }));
+// app.get("/googlelogin", passport.authenticate("google", { scope: ["profile", "email"] }));
 
 
-// Callback Route
-app.get(
-    "/auth/google/callback",
-    passport.authenticate("google", { failureRedirect: `${process.env.FRONTEND_URL}/chat/?error=google` }),
-    async (req, res) => {
-        try {
-            const googleUser = req.user;
-            const email = googleUser.emails[0].value;
+// // Callback Route
+// app.get(
+//     "/auth/google/callback",
+//     passport.authenticate("google", { failureRedirect: `${process.env.FRONTEND_URL}/chat/?error=google` }),
+//     async (req, res) => {
+//         try {
+//             const googleUser = req.user;
+//             const email = googleUser.emails[0].value;
 
-            // ✅ Check if user exists
-            let user = await User.findOne({ email });
+//             // ✅ Check if user exists
+//             let user = await User.findOne({ email });
 
-            // ✅ If not, create a new user
-            if (!user) {
-                const strongPassword = crypto.randomBytes(16).toString("hex"); // 32-char strong password
-                user = await User.create({
-                    fullName: googleUser.displayName,
-                    email: email,
-                    password: strongPassword, // store hashed if using authentication
-                });
-            }
+//             // ✅ If not, create a new user
+//             if (!user) {
+//                 const strongPassword = crypto.randomBytes(16).toString("hex"); // 32-char strong password
+//                 user = await User.create({
+//                     fullName: googleUser.displayName,
+//                     email: email,
+//                     password: strongPassword, // store hashed if using authentication
+//                 });
+//             }
 
-            // ✅ Create JWT with our own DB userId
-            const token = jwt.sign(
-                { userId: user._id, email: user.email, fullName: user.fullName },
-                process.env.JWT_SECRET,
-                { expiresIn: "7d" }
-            );
+//             // ✅ Create JWT with our own DB userId
+//             const token = jwt.sign(
+//                 { userId: user._id, email: user.email, fullName: user.fullName },
+//                 process.env.JWT_SECRET,
+//                 { expiresIn: "7d" }
+//             );
 
-            // ✅ Redirect with JWT
-            res.redirect(`${process.env.FRONTEND_URL}/chat/?token=${token}`);
-        } catch (error) {
-            console.error("Google login error:", error.message);
-            res.redirect("/login?error=google");
-        }
-    }
-);
+//             // ✅ Redirect with JWT
+//             res.redirect(`${process.env.FRONTEND_URL}/chat/?token=${token}`);
+//         } catch (error) {
+//             console.error("Google login error:", error.message);
+//             res.redirect("/login?error=google");
+//         }
+//     }
+// );
 
 // Create HTTP server
 const server = http.createServer(app);
