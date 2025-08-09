@@ -22,6 +22,7 @@ import { deleteAllMessages } from './controllers/deleteChatController.js';
 import { getMessageCount } from './controllers/msgCountController.js';
 import { chatbotController } from './controllers/chatbot.js';
 import authRoutes from "./routes/authRoutes.js"
+import apiRoutes from "./routes/apiRoutes.js"
 import setupPassport from "./passportSetup.js"
 dotenv.config();
 
@@ -59,61 +60,22 @@ await connectDB();
 // passport.deserializeUser((user, done) => done(null, user));
 
 // Routes
-app.post('/login', loginController);
-app.post('/signup', signupController);
-app.post('/signup-guest', guestSignupController);
-app.put('/update-info', verifyAuthMiddleware, updatePersonalDetails)
-app.put('/delete-chat', verifyAuthMiddleware, deleteAllMessages)
-app.get('/msg-count', verifyAuthMiddleware, getMessageCount)
-app.post('/chatbot-resp', chatbotController)
-app.post('/jwtverify', jwtVerifyController);
-app.post('/adminlogin', adminLoginController)
+// app.post('/login', loginController);
+// app.post('/signup', signupController);
+// app.post('/signup-guest', guestSignupController);
+// app.put('/update-info', verifyAuthMiddleware, updatePersonalDetails)
+// app.put('/delete-chat', verifyAuthMiddleware, deleteAllMessages)
+// app.get('/msg-count', verifyAuthMiddleware, getMessageCount)
+// app.post('/chatbot-resp', chatbotController)
+// app.post('/jwtverify', jwtVerifyController);
+// app.post('/adminlogin', adminLoginController)
 // Login Route
 
 // Setup passport strategies
 setupPassport(passport);
 
 app.use("/", authRoutes)
-// app.get("/googlelogin", passport.authenticate("google", { scope: ["profile", "email"] }));
-
-
-// // Callback Route
-// app.get(
-//     "/auth/google/callback",
-//     passport.authenticate("google", { failureRedirect: `${process.env.FRONTEND_URL}/chat/?error=google` }),
-//     async (req, res) => {
-//         try {
-//             const googleUser = req.user;
-//             const email = googleUser.emails[0].value;
-
-//             // ✅ Check if user exists
-//             let user = await User.findOne({ email });
-
-//             // ✅ If not, create a new user
-//             if (!user) {
-//                 const strongPassword = crypto.randomBytes(16).toString("hex"); // 32-char strong password
-//                 user = await User.create({
-//                     fullName: googleUser.displayName,
-//                     email: email,
-//                     password: strongPassword, // store hashed if using authentication
-//                 });
-//             }
-
-//             // ✅ Create JWT with our own DB userId
-//             const token = jwt.sign(
-//                 { userId: user._id, email: user.email, fullName: user.fullName },
-//                 process.env.JWT_SECRET,
-//                 { expiresIn: "7d" }
-//             );
-
-//             // ✅ Redirect with JWT
-//             res.redirect(`${process.env.FRONTEND_URL}/chat/?token=${token}`);
-//         } catch (error) {
-//             console.error("Google login error:", error.message);
-//             res.redirect("/login?error=google");
-//         }
-//     }
-// );
+app.use("/", apiRoutes)
 
 // Create HTTP server
 const server = http.createServer(app);
