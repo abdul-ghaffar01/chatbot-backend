@@ -36,6 +36,9 @@ setupPassport(passport);
 // Routes
 app.use("/", authRoutes)
 app.use("/", apiRoutes)
+app.get("/", (req, res) => {
+    res.send("API is running...");
+});
 
 // Create HTTP server
 const server = http.createServer(app);
