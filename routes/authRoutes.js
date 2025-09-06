@@ -10,7 +10,7 @@ router.get('/googlelogin', passport.authenticate('google', { scope: ['profile', 
 
 router.get(
     '/auth/google/callback',
-    passport.authenticate('google', { failureRedirect: `${process.env.FRONTEND_URL}/chat/?error=google` }),
+    passport.authenticate('google', { failureRedirect: `${process.env.FRONTEND_URL}/?error=google` }),
     async (req, res) => {
         try {
             const googleUser = req.user;
@@ -32,7 +32,7 @@ router.get(
                 { expiresIn: '7d' }
             );
 
-            res.redirect(`${process.env.FRONTEND_URL}/chat/?token=${token}`);
+            res.redirect(`${process.env.FRONTEND_URL}/?token=${token}`);
         } catch (error) {
             console.error('Google login error:', error.message);
             res.redirect('/login?error=google');
