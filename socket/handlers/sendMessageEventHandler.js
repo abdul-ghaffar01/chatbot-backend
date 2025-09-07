@@ -2,24 +2,34 @@ import Message from "../../models/Message.js";
 import { onlineUsers, userSockets } from "../utils/maps.js";
 
 export default async function sendMessageEventHanlder(io, socket, userId) {
-    // ✅ Send Message (User -> Bot -> Admin Notification)
-    socket.on('sendMessage', async (data) => {
+    socket.on("sendMessage", async (data) => {
         try {
-            // Save user's message
+            // Save user's message to DB
             const savedUserMessage = await Message.create({
                 userId: userId,
                 content: data.content,
                 sender: "user",
-                to: process.env.BOT_ACCOUNT_ID || "68860f0b7d694be675bae2ff"
+                to: process.env.BOT_ACCOUNT_ID || "68860f0b7d694be675bae2ff",
             });
 
-            // Send message back to sender (user)
-            socket.emit('receiveMessage', savedUserMessage);
+            // 🔑 Keep the tempId so client can update
+            const userMessageWithTempId = {
+                ...savedUserMessage.toObject(),
+                tempId: data.tempId,   // 👈 preserve tempId
+            };
+
+            // Send back to sender (will update pending → delivered)
+            socket.emit("receiveMessage", userMessageWithTempId);
+            // setTimeout(() => {
+            //     socket.emit('receiveMessage', {
+            //         ...savedUserMessage.toObject(),
+            //         tempId: data.tempId, // keep tempId for matching!
+            //     });
+            // }, 2000); // 2s delay
 
             // Notify admin in real-time
-            const adminSocketId = userSockets.get("admin");
             if (adminSocketId) {
-                io.to(adminSocketId).emit("adminReceiveMessage", savedUserMessage);
+                io.to(adminSocketId).emit("adminReceiveMessage", userMessageWithTempId);
             }
 
             // Send bot reply (if enabled)
@@ -27,30 +37,32 @@ export default async function sendMessageEventHanlder(io, socket, userId) {
             const userInfo = onlineUsers.get(recipientSocketId);
 
             if (recipientSocketId && userInfo?.botRepliesEnabled) {
-                socket.emit("typing")
-                // Fetch bot reply
+                socket.emit("typing");
+
                 const res = await fetch(`${process.env.CHATBOT_BACKEND_URL}/chatbot-resp`, {
-                    method: 'POST',
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${process.env.CHATBOT_API_TOKEN}`
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${process.env.CHATBOT_API_TOKEN}`,
                     },
                     body: JSON.stringify({ message: data.content }),
                 });
 
                 const botData = await res.json();
-                const botReply = botData.reply || botData || "I'm here to help!";
+                const botReply = botData.reply || "Couldn't get response from GPT";
 
-                // Save bot message
+                // Save bot reply
                 const savedBotMessage = await Message.create({
                     userId: process.env.BOT_ACCOUNT_ID || "68860f0b7d694be675bae2ff",
                     content: botReply,
                     sender: "chatbot",
-                    to: userId
+                    to: userId,
                 });
-                socket.emit("stopTyping")
+
+                socket.emit("stopTyping");
+
                 // Send bot reply to user
-                io.to(recipientSocketId).emit('receiveMessage', savedBotMessage);
+                io.to(recipientSocketId).emit("receiveMessage", savedBotMessage);
 
                 // Send bot reply to admin
                 if (adminSocketId) {
@@ -58,9 +70,8 @@ export default async function sendMessageEventHanlder(io, socket, userId) {
                 }
             }
         } catch (err) {
-            socket.emit("stopTyping")
-            console.error('Message error:', err.message);
+            socket.emit("stopTyping");
+            console.error("Message error:", err.message);
         }
     });
-
 }

@@ -13,9 +13,10 @@ export const chatbotController = (req, res) => {
         }
 
         const token = authHeader.split(' ')[1];
+        console.log("chatbot token", token)
 
         // ✅ Verify token
-        jwt.verify(token, process.env.JWT_SECRET_BOT, (err) => {
+        jwt.verify(token, process.env.JWT_SECRET_FOR_BOT_TO_HIT_RESPONSE_URL, (err) => {
             if (err) {
                 return res.status(403).json({ error: 'Invalid or expired token' });
             }

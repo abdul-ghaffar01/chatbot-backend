@@ -66,7 +66,7 @@ export default function setupSocketHandlers(io) {
         sendMessageEventHanlder(io, socket, userId);
 
         // Get last n messages of client: used on download page in options
-        getLastNMessages(socket)
+        getLastNMessages(socket, userId)
         // ------------------ Admin events ------------------
         // Get all chats for admin to list on admin panel
         getAllChatsForAdmin(socket)
@@ -79,7 +79,7 @@ export default function setupSocketHandlers(io) {
 
         // Send message for admin to send message to users
         sendMessageAdmin(io, socket)
-        
+
         // When a user disconnects
         disconnect(io, socket)
     });

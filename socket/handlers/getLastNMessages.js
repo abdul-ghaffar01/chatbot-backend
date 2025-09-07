@@ -1,6 +1,6 @@
 import Message from "../../models/Message.js";
 
-export default async function getLastNMessages(socket) {
+export default async function getLastNMessages(socket, userId) {
 
     // Event: Fetch last N messages used for download purpose
     socket.on("get_last_messages", async ({ limit }) => {
