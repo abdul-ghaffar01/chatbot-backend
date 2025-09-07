@@ -2,8 +2,6 @@
 import jwt from 'jsonwebtoken';
 import { getChatbotResponse } from '../utils/chatbotResponse.js';
 
-const SECRET = "the_secret80lksud8xod893";
-
 export const chatbotController = (req, res) => {
     try {
         // ✅ Extract token from Authorization header (Bearer token)
@@ -13,7 +11,6 @@ export const chatbotController = (req, res) => {
         }
 
         const token = authHeader.split(' ')[1];
-        console.log("chatbot token", token)
 
         // ✅ Verify token
         jwt.verify(token, process.env.JWT_SECRET_FOR_BOT_TO_HIT_RESPONSE_URL, (err) => {

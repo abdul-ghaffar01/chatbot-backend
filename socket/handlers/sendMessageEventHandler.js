@@ -1,6 +1,6 @@
 import Message from "../../models/Message.js";
 import { onlineUsers, userSockets } from "../utils/maps.js";
-
+import jwt from "jsonwebtoken";
 export default async function sendMessageEventHanlder(io, socket, userId) {
     socket.on("sendMessage", async (data) => {
         try {
@@ -28,6 +28,7 @@ export default async function sendMessageEventHanlder(io, socket, userId) {
             // }, 2000); // 2s delay
 
             // Notify admin in real-time
+            const adminSocketId = userSockets.get("admin");
             if (adminSocketId) {
                 io.to(adminSocketId).emit("adminReceiveMessage", userMessageWithTempId);
             }
@@ -39,11 +40,17 @@ export default async function sendMessageEventHanlder(io, socket, userId) {
             if (recipientSocketId && userInfo?.botRepliesEnabled) {
                 socket.emit("typing");
 
+                const apiToken = jwt.sign(
+                    { role: "chatbot", iat: Math.floor(Date.now() / 1000) },
+                    process.env.JWT_SECRET_FOR_BOT_TO_HIT_RESPONSE_URL,
+                    { expiresIn: "1m" } // short-lived
+                );
+
                 const res = await fetch(`${process.env.CHATBOT_BACKEND_URL}/chatbot-resp`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Bearer ${process.env.CHATBOT_API_TOKEN}`,
+                        Authorization: `Bearer ${apiToken}`,
                     },
                     body: JSON.stringify({ message: data.content }),
                 });
