@@ -1,4 +1,5 @@
 import Message from "../../models/Message.js";
+import getChats from "../../utils/getChats.js";
 import { onlineUsers, userSockets } from "../utils/maps.js";
 import jwt from "jsonwebtoken";
 export default async function sendMessageEventHanlder(io, socket, userId) {
@@ -67,6 +68,13 @@ export default async function sendMessageEventHanlder(io, socket, userId) {
                 });
 
                 socket.emit("stopTyping");
+
+                // emitting chats again on every message
+                getChats().then((allChats) => {
+                    if (adminSocketId) {
+                        io.to(adminSocketId).emit("allChats", allChats);
+                    }
+                })
 
                 // Send bot reply to user
                 io.to(recipientSocketId).emit("receiveMessage", savedBotMessage);

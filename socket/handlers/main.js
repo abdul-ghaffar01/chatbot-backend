@@ -1,6 +1,7 @@
 import jwt_verify from '../../helper/jwt_verify.js';
 import Message from '../../models/Message.js';
 import User from '../../models/User.js';
+import getChats from '../../utils/getChats.js';
 import { broadcastOnlineUsers } from '../utils/broadcastOnlineUsers.js';
 import { onlineUsers, userSockets } from '../utils/maps.js';
 import chatHistoryForAdmin from './admin/chatHistoryHandler.js';
@@ -55,6 +56,17 @@ export default function setupSocketHandlers(io) {
                         }
                     ]
                 }).sort({ sentAt: 1 }).limit(1000); // Oldest first
+
+                // there is possibility that user has just created account so sending chats to user
+                const adminSocketId = userSockets.get("admin");
+                if (adminSocketId) {
+                    getChats().then((allChats) => {
+                        io.to(adminSocketId).emit("allChats", allChats);
+                    }).catch((err) => {
+                        console.error('Error in getChats():', err.message);
+                        io.to(adminSocketId).emit('allChats', []);
+                    });
+                }
 
                 socket.emit('chatHistory', history);
             }
